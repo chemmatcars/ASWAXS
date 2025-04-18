@@ -3,6 +3,7 @@ import os.path
 from PyQt5.uic import loadUi
 from PyQt5.QtWidgets import QWidget, QApplication, QMessageBox, QFileDialog, QMessageBox, QDesktopWidget, QMainWindow, QDialog
 from PyQt5.QtCore import pyqtSignal, Qt, QThread
+from PyQt5.QtGui import QTextCursor
 from pydm import Display
 from bluesky_queueserver import bind_plan_arguments
 from pandas.core.methods.describe import select_describe_func
@@ -152,7 +153,7 @@ class Bluesky_Client(Display):
         with open(fname, 'r') as fh:
             lines = fh.readlines()
             qpos = self.queueListWidget.count()
-            print(qpos)
+            # print(qpos)
             for line in lines:
                 if line[0] != '#':
                     item = eval(line.strip())
@@ -285,8 +286,7 @@ class Bluesky_Client(Display):
             request = {"method": "script_upload", "params":{"script": script, "update_lists": True}}
             response = self.send_zmq_request(request)
             if response.get("success"):
-                if self.success_message:
-                    QMessageBox.information(self, 'Success', 'Loaded external plan/script successfully!')
+                QMessageBox.information(self, 'Success', 'Loaded external plan/script successfully!')
                 self.updatePlanComboBox()
             else:
                 QMessageBox.critical(self, 'Error', response.get("msg", 'Failed to load the external plan/script.'))
@@ -313,19 +313,32 @@ class Bluesky_Client(Display):
         self.socket_sub.setsockopt_string(zmq.SUBSCRIBE, "")
 
         # Thread to receive messages
+        # try:
+        #     self.message_thread.join()
+        #     print('message killed')
+        # except:
+        #     pass
         self.message_thread = threading.Thread(target=self.receive_messages)
         self.message_thread.daemon = True
         # self.message_thread = BskyThread(self.socket_sub)
         self.message_received.connect(self.append_message)
         self.message_thread.start()
+        # self.message_thread.join()
         self.updatePlanComboBox()
 
         self.qnum=0
+        # try:
+        #     self.queue_thread.join()
+        #     print('queue killed')
+        # except:
+        #     pass
         self.queue_thread = threading.Thread(target=self.monitor_queue)
         self.queue_thread.daemon = True
         self.queue_updated.connect(self.update_queue)
         self.queue_status.connect(self.update_queue_status)
         self.queue_thread.start()
+        # self.queue_thread.join()
+
 
     def update_queue_status(self, status):
         if status == 'Idle':
@@ -346,6 +359,7 @@ class Bluesky_Client(Display):
             self.ui.moveDownPushButton.setEnabled(False)
 
     def monitor_queue(self):
+        print('Queue monitoring thread started')
         while self.queueMonitoring:
             response1 = self.send_zmq_request({"method": "queue_get", "params": {}})
             items = response1["items"]
@@ -380,7 +394,8 @@ class Bluesky_Client(Display):
                 self.ui.clearArchivePushButton.setEnabled(True)
             else:
                 self.ui.clearArchivePushButton.setEnabled(False)
-            time.sleep(1)
+            time.sleep(1.0)
+        print('Queue monitoring thread killed')
 
     def update_queue(self, runningItem, items, history_items):
         self.ui.queueListWidget.clear()
@@ -416,32 +431,38 @@ class Bluesky_Client(Display):
             QMessageBox.critical(self, 'Error', response.get("msg", 'Failed to clear the plans in the archive'))
 
     def receive_messages(self):
+        print('Message transfer thread started')
         while self.messageTransfer:
             message = self.socket_sub.recv_string()
             # Debugging output: print the received message
             #            print("Received message:", message)
             if "Returning current queue and running plan" not in message and "Returning plan history" not in message:
                 self.message_received.emit(message)
+        print('Message transfer thread killed')
 
     def append_message(self, message):
         if 'QS_Console' not in message:
             msg = json.loads(message).get("msg", "")
             self.ui.bskyMessageTextEdit.append(msg)
+            self.ui.bskyMessageTextEdit.moveCursor(QTextCursor.End)
 
     def updatePlanComboBox(self):
         request = {"method": "plans_allowed", "params": {"user_group":"root"}}
         response = self.send_zmq_request(request)
-        self.allowedPlans = response["plans_allowed"]
-        request = {"method": "devices_allowed", "params": {"user_group":"root"}}
-        response = self.send_zmq_request(request)
-        self.allowedDevices = response['devices_allowed']
-        self.allowedPlansByNames=list(self.allowedPlans.keys())
-        self.allowedDevicesByNames=list(self.allowedDevices.keys())
-        self.allowedPlansByNames.sort()
-        self.allowedDevicesByNames.sort()
-        self.ui.planComboBox.clear()
-        self.ui.planComboBox.addItems(self.allowedPlansByNames)
-        self.ui.consoleWidget.execute_command('RM=REManagerAPI(zmq_control_addr="%s")' % self.zmqReqServer)
+        if response.get('success'):
+            self.allowedPlans = response["plans_allowed"]
+            request = {"method": "devices_allowed", "params": {"user_group":"root"}}
+            response = self.send_zmq_request(request)
+            self.allowedDevices = response['devices_allowed']
+            self.allowedPlansByNames=list(self.allowedPlans.keys())
+            self.allowedDevicesByNames=list(self.allowedDevices.keys())
+            self.allowedPlansByNames.sort()
+            self.allowedDevicesByNames.sort()
+            self.ui.planComboBox.clear()
+            self.ui.planComboBox.addItems(self.allowedPlansByNames)
+        else:
+            QMessageBox.critical(self, 'Error', response.get("msg", 'Failed to get the allowed plans information'))
+        # self.ui.consoleWidget.execute_command('RM=REManagerAPI(zmq_control_addr="%s")' % self.zmqReqServer)
 
 
     def importAllAPIs(self):

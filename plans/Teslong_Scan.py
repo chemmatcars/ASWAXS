@@ -2,7 +2,6 @@ from ophyd import EpicsSignal, EpicsMotor
 import pandas as pd
 from ophyd.signal import EpicsSignal
 from bluesky.callbacks import LiveFit, LiveFitPlot, LivePlot, LiveTable
-import lmfit
 from bluesky.plan_stubs import mv, mvr, sleep, abs_set
 from bluesky import RunEngine
 import epics
@@ -50,25 +49,26 @@ Teslong_enable_callbacks.put(0)
 # Turn off auto increment
 Teslong_auto_increment.put(0)
 
-def set_infuse_flowrate_phdUltra(flow_rate, target_volume):
+def set_infuse_flowrate_phdUltra(flow_rate):
     """
 
     :param flow_rate: flow rate in uL/min
-    :param target_volume: target volume in mL
-    :return:
     """
-
     # yield from mv(phdUltra_pump_flowrate, flow_rate)
-    yield from abs_set(phdUltra_pump_flowrate, flow_rate)
-    yield from abs_set(phdUltra_pump_targetvolume, target_volume*1000)
-    print(f'Set syringe infusing flow rate {flow_rate} uL/min, target volume {target_volume} mL' )
+    yield from abs_set(phdUltra_pump_flowrate, flow_rate, wait=False)
+    # yield from phdUltra_pump_flowrate.set(flow_rate, wait=False)
+    print(f'Set syringe infusing flow rate {flow_rate} uL/min' )
+
+def set_volume_phdUltra(target_volume):
+    yield from abs_set(phdUltra_pump_targetvolume, target_volume * 1000, wait=False)
+    print(f'Set syringe target volume {target_volume} mL')
 
 def start_infuse_phdUltra_plan():
-    yield from abs_set(phdUltra_pump_infuse,1)
+    yield from abs_set(phdUltra_pump_infuse,1, wait=False)
     print("Started syringe pump")
 
 def stop_infuse_phdUltra():
-    yield from abs_set(phdUltra_pump_infuse, 0)
+    yield from abs_set(phdUltra_pump_infuse, 0, wait=False)
     print('Syringe pump stopped')
 
 def get_focus_measure():
@@ -180,12 +180,13 @@ def capture_images_from_list(
     # Teslong_image_mode.put(1)  # Set to multiple mode
 
     # Assuming the columns are named 'x', 'y', 'z'
-    x_values, y_values = df['Vertex_X'].values, df['Vertex_Y'].values  # Adjusted column access
+    x_values, y_values = df['#Vertex_X'].values, df['Vertex_Y'].values  # Adjusted column access
 
     if position_test:
         Teslong_enable_callbacks.put(0)  # Enable callbacks for data capture
         Teslong_image_mode.put(2)
         Teslong_acquire_data.put(1)  # Start acquiring data
+        scan_num = 0
         for i in range(0, len(x_values), interval):  # Iterate with the given interval
             tx, ty = x_values[i], y_values[i]
             yield from mv(sx, tx + x_offset, sy, ty + y_offset)  # Move motors to (x, y)
@@ -194,14 +195,15 @@ def capture_images_from_list(
             # Teslong_file_number.put(i)  # Update file number for saving
             yield from autofocus(0.5)  # Adjust autofocus
 
-            print(f"Test scan reached at ({tx}, {ty}).")  # Log position
+            print(f"Scan {scan_num}: Test at ({tx}, {ty}).")  # Log position
+            scan_num +=1
     else:
         # Capture images at intervals specified by 'interval'
         if max_i is None:
             stop_idx = len(x_values)
         else:
             stop_idx = max_i
-
+        scan_num = 0
         for i in range(0, stop_idx, interval):  # Iterate with the given interval
             tx, ty = x_values[i], y_values[i]
             yield from mv(sx, tx + x_offset, sy, ty + y_offset)  # Move motors to (x, y)
@@ -213,8 +215,8 @@ def capture_images_from_list(
             Teslong_enable_callbacks.put(1)  # Enable callbacks for data capture
             # Teslong_acquire_data.put(1)  # Start acquiring data
             # yield from sleep(3)  # Wait for data acquisition
-            # print(f"Image captured at ({tx}, {ty}) and saved as {Teslong_file_name}{str(i)}.")  # Log position
-
+            print(f"Scan {scan_num}: Image  captured at ({tx}, {ty}) and saved as {file_prefix}_{i:03d}.")  # Log position
+            scan_num += 1
     Teslong_enable_callbacks.put(0)  # Turn off callbacks after scans
 
     return 0

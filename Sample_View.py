@@ -9,6 +9,7 @@ from epics import Motor
 import numpy as np
 import paramiko
 import time
+from tempfile import TemporaryFile
 
 class Sample_View(Display):
     def __init__(self, parent=None, args=None, macros=None):
@@ -320,6 +321,7 @@ class Sample_View(Display):
     def plotPositions(self):
         pos = self.positions2Array()
         self.positionPlot.add_data(pos[:, 0], pos[:, 1], name='Sample Positions')
+        self.positionPlot.Plot(['Sample Positions'])
         # try:
         #     self.scatterPlot.setData(pos[:, 0], pos[:, 1])
         # except:
@@ -348,10 +350,21 @@ class Sample_View(Display):
             return
         # ifname = '/chemdata/Data/ASWAXS/Software/ASWAXS/Data/test_positions.pos'
         # ofname = '/chemdata/Data/ASWAXS/Software/ASWAXS/Data/test.csv'
-        lifname = QFileDialog.getOpenFileName(self, "Open input file", "Select the file for input", "Input Files (*.pos)")[0]
+        positions = self.positions2Array()
+        header = ''
+        for ch in self.chan:
+            header = header + ch + ' '
+
+        np.savetxt('./Data/temp.pos', positions, fmt='%.3f', header=header)
+        lifname = os.path.abspath('./Data/temp.pos')
+        print(f'temp path is {lifname}')
+        # lifname = QFileDialog.getOpenFileName(self, "Open input file", "Select the file for input", "Input Files (*.pos)")[0]
         if os.path.exists(lifname):
             ifname=lifname.replace(localMount, chemmat92Mount)
-            lofname = QFileDialog.getSaveFileName(self, "Save output as", "Provide an output file", "Output Files (*.csv *.txt)")[0]
+            print(f'local mount is {localMount}')
+            ifname = ifname.replace('\\','/')
+            print(f'server temp path is {ifname}')
+            lofname = QFileDialog.getSaveFileName(self, "Save output as", "./Data", "Output Files (*.csv *.txt)")[0]
             if lofname != "":
                 if os.path.splitext(lofname)[1] == "":
                     lofname += "*.csv"
@@ -390,6 +403,7 @@ class Sample_View(Display):
         finally:
             client.close()
             print("Connection closed")
+        os.remove(lifname)
         data = np.loadtxt(lofname, comments='#', delimiter=',')
         self.positionPlot.add_data(data[:, 0], data[:, 1], name = 'Interpolated Positions')
         self.positionPlot.Plot(['Sample Positions', 'Interpolated Positions'])

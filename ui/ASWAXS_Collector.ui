@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1012</width>
+    <width>1251</width>
     <height>786</height>
    </rect>
   </property>
@@ -23,7 +23,7 @@
       <string/>
      </property>
      <property name="currentIndex">
-      <number>2</number>
+      <number>0</number>
      </property>
      <property name="alarmChannels">
       <stringlist>
@@ -36,7 +36,18 @@
       <attribute name="title">
        <string>ASWAXS Instrument</string>
       </attribute>
-      <layout class="QHBoxLayout" name="horizontalLayout_3"/>
+      <layout class="QHBoxLayout" name="horizontalLayout_3">
+       <item>
+        <widget class="PyDMEmbeddedDisplay" name="PyDMEmbeddedDisplay_3">
+         <property name="toolTip">
+          <string/>
+         </property>
+         <property name="filename" stdset="0">
+          <string>phdUltra</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </widget>
      <widget class="QWidget" name="tab_2">
       <attribute name="title">
