@@ -3,11 +3,13 @@ from os import path
 from pydm import Display
 import cv2
 from PyQt5.QtCore import QTimer
-from PyQt5.QtWidgets import QMessageBox, QFileDialog, QApplication
+from PyQt5.QtWidgets import QMessageBox, QFileDialog, QApplication, QWidget
+from PyQt5 import uic
 import pyqtgraph as pg
 from epics import Motor
 import numpy as np
 import paramiko
+from pydm.widgets.frame import PyDMFrame
 import time
 from tempfile import TemporaryFile
 
@@ -28,6 +30,7 @@ class Sample_View(Display):
         self.ymotor = Motor('15IDD:m18')
         self.roisize = int(self.ui.roiSizeLineEdit.text())
         self.offsetFactor = 1. / 3.3538
+        self.calibrationFlag = False
         self.init_signals()
 
         self.centerXLine = pg.InfiniteLine(pos=self.image_width / 2, angle=90, pen=pg.mkPen('r'), movable=False)
@@ -36,8 +39,11 @@ class Sample_View(Display):
         self.viewBox.addItem(self.centerYLine)
         self.cursorXLine = pg.InfiniteLine(pos=0, angle=90, pen=pg.mkPen('b'))
         self.cursorYLine = pg.InfiniteLine(pos=0, angle=0, pen=pg.mkPen('b'))
+        self.calibrationPoints = pg.ScatterPlotItem()
         self.viewBox.addItem(self.cursorXLine)
         self.viewBox.addItem(self.cursorYLine)
+        self.viewBox.addItem(self.calibrationPoints)
+        self.calibrationPoints.hide()
         self.cursorXLine.hide()
         self.cursorYLine.hide()
 
@@ -68,6 +74,37 @@ class Sample_View(Display):
         self.ui.centerYPushButton.clicked.connect(self.centerY)
         self.ui.roiSizeLineEdit.returnPressed.connect(self.roiSizeChanged)
         self.ui.blenderInterpolatePushButton.clicked.connect(self.blenderInterpolate)
+        self.ui.calibratePushButton.clicked.connect(self.openCalibration)
+
+
+    def openCalibration(self):
+        self.calibrationPos=[[0,0],[1,1]]
+        self.calibrationWidget = PyDMFrame()
+        self.calibrationWidget = uic.loadUi('ui/Calibrate.ui',self.calibrationWidget)
+        self.calibrationFlag = True
+        self.calibrationPoints.show()
+        self.calibrationWidget.firstPosPushButton.clicked.connect(lambda x: self.selectPos(pos=1))
+        self.calibrationWidget.secondPosPushButton.clicked.connect(lambda x: self.selectPos(pos=2))
+        self.calibrationWidget.calibratePushButton.clicked.connect(self.calibrate)
+        self.calibrationWidget.show()
+
+    def selectPos(self, pos=1):
+        self.chosenPosition = pos
+
+    def calibrate(self):
+        try:
+            knownDistance = float(self.calibrationWidget.knownDistanceLineEdit.text())
+        except Exception as e:
+            QMessageBox.critical(self,'Value Error', f'{e}')
+            return
+        distance = np.sqrt((self.pos1[0]-self.pos2[0])**2+(self.pos1[1]-self.pos2[1])**2)
+        self.cf = np.round(knownDistance/distance,6)
+        self.cfLineEdit.setText(f'{self.cf:.6f}')
+        self.calibrationFlag = False
+        self.calibrationPoints.hide()
+        self.calibrationWidget.close()
+
+
 
     def moveOnListClicked(self, item):
         row = self.ui.positionListWidget.row(item)
@@ -157,6 +194,19 @@ class Sample_View(Display):
                     QApplication.processEvents()
             if self.autoAdd2ListCheckBox.isChecked():
                 self.addPosition()
+        elif self.calibrationFlag:
+            if self.chosenPosition == 1:
+                self.calibrationWidget.firstPosLineEdit.setText(f'x: {self.x}, y: {self.y}')
+                self.pos1 = [self.x, self.y]
+                self.calibrationPos[0] = self.pos1
+                self.calibrationPoints.setData(pos = self.calibrationPos, size = 10 ,symbol = 'o', pen=pg.mkPen(color='red'))
+            else:
+                self.calibrationWidget.secondPosLineEdit.setText(f'x: {self.x}, y: {self.y}')
+                self.pos2 = [self.x, self.y]
+                self.calibrationPos[1] = self.pos2
+                self.calibrationPoints.setData(pos=self.calibrationPos, size = 10, symbol = 'o', pen=pg.mkPen(color='red'))
+        else:
+            pass
 
     def calcROI(self):
         roi1 = self.image[self.imageCenterY - self.roisize:self.imageCenterY,
