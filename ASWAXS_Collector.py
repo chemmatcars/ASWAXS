@@ -10,7 +10,7 @@ import numpy as np
 class ASWAXS_Collector(Display):
     def __init__(self, parent=None, args=None, macros=None):
         super(ASWAXS_Collector, self).__init__(parent=parent, args=args, macros=None)
-        self.ui.PyDMTabWidget.setCurrentIndex(1)
+        self.tabWidget.setCurrentIndex(1)
 
 
     def ui_filename(self):

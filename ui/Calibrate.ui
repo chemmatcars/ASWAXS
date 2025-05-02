@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Form</class>
+ <widget class="PyDMFrame" name="Form">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>384</width>
+    <height>115</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QHBoxLayout" name="horizontalLayout">
+   <item>
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="0" column="3">
+      <widget class="QPushButton" name="firstPosPushButton">
+       <property name="text">
+        <string>Select</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="2">
+      <widget class="QLineEdit" name="secondPosLineEdit">
+       <property name="text">
+        <string>x: 1.0, y: 1.0</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="3">
+      <widget class="QPushButton" name="secondPosPushButton">
+       <property name="text">
+        <string>Select</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0" colspan="2">
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string>Known Distance (mm)</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="2">
+      <widget class="QLineEdit" name="knownDistanceLineEdit">
+       <property name="text">
+           <string>1.0</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="3">
+      <widget class="QPushButton" name="calibratePushButton">
+       <property name="text">
+        <string>Calibrate</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="2">
+      <widget class="QLineEdit" name="firstPosLineEdit">
+       <property name="text">
+        <string>x: 0.0, y: 0.0</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0" colspan="2">
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>Second Position</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0" colspan="2">
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>First Position</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>PyDMFrame</class>
+   <extends>QFrame</extends>
+   <header>pydm.widgets.frame</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

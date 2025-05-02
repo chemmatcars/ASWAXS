@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1251</width>
-    <height>786</height>
+    <width>1175</width>
+    <height>811</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,52 +15,67 @@
   </property>
   <layout class="QHBoxLayout" name="horizontalLayout">
    <item>
-    <widget class="PyDMTabWidget" name="PyDMTabWidget">
-     <property name="toolTip">
-      <string/>
-     </property>
-     <property name="whatsThis">
-      <string/>
-     </property>
+    <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>0</number>
-     </property>
-     <property name="alarmChannels">
-      <stringlist>
-       <string></string>
-       <string></string>
-       <string></string>
-      </stringlist>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="tab">
       <attribute name="title">
        <string>ASWAXS Instrument</string>
       </attribute>
-      <layout class="QHBoxLayout" name="horizontalLayout_3">
-       <item>
-        <widget class="PyDMEmbeddedDisplay" name="PyDMEmbeddedDisplay_3">
-         <property name="toolTip">
-          <string/>
-         </property>
-         <property name="filename" stdset="0">
-          <string>phdUltra</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
+      <widget class="PyDMEmbeddedDisplay" name="PyDMEmbeddedDisplay_3">
+       <property name="geometry">
+        <rect>
+         <x>40</x>
+         <y>40</y>
+         <width>531</width>
+         <height>651</height>
+        </rect>
+       </property>
+       <property name="toolTip">
+        <string/>
+       </property>
+       <property name="macros" stdset="0">
+        <string>{}</string>
+       </property>
+       <property name="filename" stdset="0">
+        <string>phdUltra.ui</string>
+       </property>
+       <property name="loadWhenShown" stdset="0">
+        <bool>true</bool>
+       </property>
+       <property name="disconnectWhenHidden" stdset="0">
+        <bool>true</bool>
+       </property>
+       <property name="followSymlinks" stdset="0">
+        <bool>false</bool>
+       </property>
+      </widget>
      </widget>
      <widget class="QWidget" name="tab_2">
       <attribute name="title">
        <string>Sample View</string>
       </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout">
+      <layout class="QHBoxLayout" name="horizontalLayout_2">
        <item>
-        <widget class="PyDMEmbeddedDisplay" name="PyDMEmbeddedDisplay">
+        <widget class="PyDMEmbeddedDisplay" name="PyDMEmbeddedDisplay_2">
          <property name="toolTip">
           <string/>
          </property>
+         <property name="macros" stdset="0">
+          <string>{}</string>
+         </property>
          <property name="filename" stdset="0">
           <string>Sample_View.ui</string>
+         </property>
+         <property name="loadWhenShown" stdset="0">
+          <bool>true</bool>
+         </property>
+         <property name="disconnectWhenHidden" stdset="0">
+          <bool>true</bool>
+         </property>
+         <property name="followSymlinks" stdset="0">
+          <bool>false</bool>
          </property>
         </widget>
        </item>
@@ -70,14 +85,26 @@
       <attribute name="title">
        <string>Bluesky Client</string>
       </attribute>
-      <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <layout class="QVBoxLayout" name="verticalLayout">
        <item>
-        <widget class="PyDMEmbeddedDisplay" name="PyDMEmbeddedDisplay_2">
+        <widget class="PyDMEmbeddedDisplay" name="PyDMEmbeddedDisplay">
          <property name="toolTip">
           <string/>
          </property>
+         <property name="macros" stdset="0">
+          <string>{}</string>
+         </property>
          <property name="filename" stdset="0">
-          <string>Bluesky_Client</string>
+          <string>Bluesky_Client.ui</string>
+         </property>
+         <property name="loadWhenShown" stdset="0">
+          <bool>true</bool>
+         </property>
+         <property name="disconnectWhenHidden" stdset="0">
+          <bool>true</bool>
+         </property>
+         <property name="followSymlinks" stdset="0">
+          <bool>false</bool>
          </property>
         </widget>
        </item>
@@ -88,11 +115,6 @@
   </layout>
  </widget>
  <customwidgets>
-  <customwidget>
-   <class>PyDMTabWidget</class>
-   <extends>QTabWidget</extends>
-   <header>pydm.widgets.tab_bar</header>
-  </customwidget>
   <customwidget>
    <class>PyDMEmbeddedDisplay</class>
    <extends>QFrame</extends>
