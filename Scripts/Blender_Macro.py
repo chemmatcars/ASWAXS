@@ -78,6 +78,7 @@ clean_scene()
 parser = argparse.ArgumentParser(description="Blender script to process CSV data.")
 parser.add_argument("csv_file", help="Path to the input CSV file")
 parser.add_argument("output_file", help="Path to save the output CSV with normals")
+parser.add_argument("spacing", help="Spacing between the points")
 
 # Extract arguments from Blender's sys.argv (skip Blender's own arguments)
 args = parser.parse_args(sys.argv[sys.argv.index("--") + 1:])
@@ -120,7 +121,7 @@ for i, (x, y, z) in enumerate(vertices):
     spline.points[i].co = (x, y, 0, 1)  # Set the coordinates
 
 # Optionally, adjust curve settings like resolution or type
-curve.data.resolution_u = float(spacing)   # Smoothness of the curve
+curve.data.resolution_u = int(float(spacing))   # Smoothness of the curve
 
 # Step 2 apply geometry nodes
 # Create a new Geometry Nodes modifier and set up nodes
@@ -178,7 +179,7 @@ if obj and obj.type == 'MESH':
         writer = csv.writer(f)
 
         # Write the header row
-        writer.writerow(["Vertex_X", "Vertex_Y", "Vertex_Z", "Normal_X", "Normal_Y", "Normal_Z"])
+        writer.writerow(["#Vertex_X", "Vertex_Y", "Vertex_Z", "Normal_X", "Normal_Y", "Normal_Z"])
 
         # Write only the first half of the vertex coordinates and normal vectors
         for vert in verts[:half_index]:

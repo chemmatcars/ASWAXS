@@ -235,7 +235,7 @@ class Sample_View(Display):
         roi4 = np.abs(roi4 - int_max)
         int_max = np.max([roi1.max(), roi2.max(), roi3.max(), roi4.max()])
         thresh = 0.1 * int_max
-        print(thresh)
+
         roi1sum = np.sum(np.where(roi1 > thresh, 1, 0))
         roi2sum = np.sum(np.where(roi2 > thresh, 1, 0))
         roi3sum = np.sum(np.where(roi3 > thresh, 1, 0))
@@ -434,8 +434,8 @@ class Sample_View(Display):
                     lofname += "*.csv"
                 ofname = lofname.replace(localMount, chemmat92Mount)
         hostname = "164.54.169.92"
-        username = "chem_epics"
-        password = "scipe%2025"  # Consider using SSH keys for better security
+        username = "mrinalkb"
+        key_filename = '/Users/mrinalkb/.ssh/mykey'
         port = 22  # Default SSH port
 
         client = paramiko.SSHClient()
@@ -443,12 +443,12 @@ class Sample_View(Display):
             paramiko.AutoAddPolicy())  # Automatically add the host key (for testing purposes only)
 
         try:
-            client.connect(hostname, port=port, username=username, password=password)
+            client.connect(hostname, port=port, username=username, key_filename=key_filename)
             print(f"Connected to {hostname}")
         except Exception as e:
             print(f"Connection error: {e}")
             exit()
-        command = f"python /chemdata/Data/ASWAXS/Software/ASWAXS/Scripts/Run_Blender.py {ifname} {ofname} {spacing:0.2f}"
+        command = f"python /home/mrinalkb/cars6/Data/chemmat/ASWAXS/Software/ASWAXS/Scripts/Run_Blender.py {ifname} {ofname} {spacing:0.2f}"
 
         try:
             stdin, stdout, stderr = client.exec_command(command)

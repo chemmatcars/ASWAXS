@@ -9,7 +9,7 @@ spacing = sys.argv[3]
 blender_command = "blender"
 
 # Path to the Python script you want to run inside Blender
-script_path = "Blender_Macro.py"
+script_path = "/home/mrinalkb/cars6/Data/chemmat/ASWAXS/Software/ASWAXS/Scripts/Blender_Macro.py"
 
 # Input and output CSV files
 # input_csv = "Z:\Asax\Jiajun\Data\A_Real_Positions0313.csv"
