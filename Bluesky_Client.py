@@ -29,7 +29,7 @@ class Bluesky_Client(Display):
     """
     message_received = pyqtSignal(str)
     queue_updated = pyqtSignal(dict, list, list)
-    queue_status = pyqtSignal(str)
+    queue_status = pyqtSignal(dict)
     history_updated = pyqtSignal()
 
     def __init__(self, parent=None, args=None, macros=None):
@@ -66,6 +66,7 @@ class Bluesky_Client(Display):
         self.ui.removePlanPushButton.clicked.connect(self.removePlansFromQueue)
         self.ui.queueListWidget.itemDoubleClicked.connect(lambda x: self.openPlanEditor(role='modify'))
         self.ui.loadExternalPlansPushButton.clicked.connect(self.loadExternalPlanOrScript)
+        self.ui.loopQueueCheckBox.stateChanged.connect(self.changeQueueMode)
 
         self.ui.pauseRMPushButton.clicked.connect(self.pauseRM)
         self.ui.resumeRMPushButton.clicked.connect(self.resumeRM)
@@ -91,6 +92,24 @@ class Bluesky_Client(Display):
 
         self.ui.queueTabWidget.setCurrentIndex(0)
         self.ui.consoleTabWidget.setCurrentIndex(1)
+
+    def changeQueueMode(self):
+        if self.ui.loopQueueCheckBox.isChecked():
+            request = {"method": "queue_mode_set", "params": {"mode": {"loop": True}}}
+            response = self.send_zmq_request(request)
+            if response.get("success"):
+                QMessageBox.information(self, 'Success', 'Loop mode is enabled successfully.')
+            else:
+                QMessageBox.critical(self, 'Error', response.get("msg", 'Failed to enable loop mode.'))
+        else:
+            request = {"method": "queue_mode_set", "params": {"mode":"default"}}
+            response = self.send_zmq_request(request)
+            if response.get("success"):
+                QMessageBox.information(self, 'Success', 'Loop mode is disabled successfully.')
+            else:
+                QMessageBox.critical(self, 'Error', response.get("msg", 'Failed to disabled loop mode.'))
+
+
 
     def restart_re_manager(self):
         self.messageTransfer = False
@@ -331,16 +350,25 @@ class Bluesky_Client(Display):
 
 
     def update_queue_status(self, status):
-        if status == 'Idle':
+
+        if status['re_state'] == 'idle':
             self.ui.queueStatusLabel.setStyleSheet("color: green;")
             self.stopQueuePushButton.setEnabled(False)
             self.startQueuePushButton.setEnabled(True)
-        else:
+        elif status['re_state'] == 'running':
             self.ui.queueStatusLabel.setStyleSheet("color: red;")
             self.startQueuePushButton.setEnabled(False)
             self.stopQueuePushButton.setEnabled(True)
-        self.ui.queueStatusLabel.setText(status)
-        self.queueStatus=status
+        else:
+            self.ui.queueStatusLabel.setStyleSheet("color: blue;")
+            self.stopQueuePushButton.setEnabled(False)
+            self.startQueuePushButton.setEnabled(True)
+        self.ui.queueStatusLabel.setText(status['re_state'])
+        self.queueStatus=status['re_state']
+        if status['plan_queue_mode']['loop']:
+            self.loopQueueCheckBox.setChecked(True)
+        else:
+            self.loopQueueCheckBox.setChecked(False)
         if self.qnum>1:
             self.ui.moveUpPushButton.setEnabled(True)
             self.ui.moveDownPushButton.setEnabled(True)
@@ -356,16 +384,14 @@ class Bluesky_Client(Display):
             runningItem = response1["running_item"]
             response2 = self.send_zmq_request({"method": "history_get", "params": {}})
             history_items = response2["items"]
+            response3 = self.send_zmq_request({"method": "status", "params":{}})
+            self.queue_status.emit(response3)
             num = len(items)
             if  items != self.queue_items or self.history_items != history_items:
                 self.queue_updated.emit(runningItem, items, history_items)
             if runningItem == {}:
                 self.runningItemLineEdit.clear()
             self.qnum = num
-            if len(response1["running_item"])>0:
-                self.queue_status.emit('Running')
-            else:
-                self.queue_status.emit('Idle')
             self.queue_items = copy.copy(items)
             self.history_items = copy.copy(history_items)
             if len(self.queue_items)>0:

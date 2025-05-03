@@ -1,0 +1,1 @@
+{'args': [['det1', 'det2'], 'motor1', -1.0, 1.0, 'motor2', -1.0, 1.0], 'kwargs': {'delay': 5.0, 'num': 11, 'md': {'Exp_Dir': './Data', 'Sample_Name': '', 'Sample_Description': ''}}}
