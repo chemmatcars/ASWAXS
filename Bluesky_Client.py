@@ -36,10 +36,8 @@ class Bluesky_Client(Display):
         """
         """
         super(Bluesky_Client, self).__init__(parent=parent, args=args, macros=None)
-        # PyDMFrame.__init__(self, parent)
-        # loadUi('./ui/Bluesky_Client.ui', self)
         self.init_signals()
-        self.importAllAPIs()
+        #self.importAllAPIs()
         self.success_message = False
         self.queue_items = []
         self.history_items = []
@@ -97,18 +95,19 @@ class Bluesky_Client(Display):
     def restart_re_manager(self):
         self.messageTransfer = False
         self.queueMonitoring = False
+        time.sleep(2)
         self.closeEnv()
 
         hostname = "164.54.169.92"
-        username = "chem_epics"
-        password = "scipe%2025"  # Consider using SSH keys for better security
+        username = "mrinalkb"
+        key_filename = '/Users/mrinalkb/.ssh/mykey'
         port = 22  # Default SSH port
 
         client = paramiko.SSHClient()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())  # Automatically add the host key (for testing purposes only)
 
         try:
-            client.connect(hostname, port=port, username=username, password=password)
+            client.connect(hostname, port=port, username=username, key_filename = key_filename)
             print(f"Connected to {hostname}")
         except Exception as e:
             print(f"Connection error: {e}")
@@ -300,7 +299,9 @@ class Bluesky_Client(Display):
         self.zmqReqServer = 'tcp://'+self.bskyServer+':'+self.zmqReqSocket
         self.zmqSubServer = 'tcp://'+self.bskyServer+':'+self.zmqSubSocket
         try:
-            self.context.close()
+            self.socket_req.close()
+            self.socket_sub.close()
+            self.context.term()
         except:
             pass
         self.context = zmq.Context()
@@ -312,12 +313,6 @@ class Bluesky_Client(Display):
         self.socket_sub.connect(self.zmqSubServer)  # Replace with your Queue server subscription ZMQ address
         self.socket_sub.setsockopt_string(zmq.SUBSCRIBE, "")
 
-        # Thread to receive messages
-        # try:
-        #     self.message_thread.join()
-        #     print('message killed')
-        # except:
-        #     pass
         self.message_thread = threading.Thread(target=self.receive_messages)
         self.message_thread.daemon = True
         # self.message_thread = BskyThread(self.socket_sub)
@@ -327,11 +322,6 @@ class Bluesky_Client(Display):
         self.updatePlanComboBox()
 
         self.qnum=0
-        # try:
-        #     self.queue_thread.join()
-        #     print('queue killed')
-        # except:
-        #     pass
         self.queue_thread = threading.Thread(target=self.monitor_queue)
         self.queue_thread.daemon = True
         self.queue_updated.connect(self.update_queue)
@@ -395,6 +385,8 @@ class Bluesky_Client(Display):
             else:
                 self.ui.clearArchivePushButton.setEnabled(False)
             time.sleep(1.0)
+        self.queue_updated.disconnect()
+        self.queue_status.disconnect()
         print('Queue monitoring thread killed')
 
     def update_queue(self, runningItem, items, history_items):
@@ -438,6 +430,7 @@ class Bluesky_Client(Display):
             #            print("Received message:", message)
             if "Returning current queue and running plan" not in message and "Returning plan history" not in message:
                 self.message_received.emit(message)
+        self.message_received.disconnect()
         print('Message transfer thread killed')
 
     def append_message(self, message):
