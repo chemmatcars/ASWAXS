@@ -1088,12 +1088,6 @@
                <property name="runCommandsInFullShell" stdset="0">
                 <bool>true</bool>
                </property>
-               <property name="stdout" stdset="0">
-                <enum>PyDMShellCommand::SHOW</enum>
-               </property>
-               <property name="stderr" stdset="0">
-                <enum>PyDMShellCommand::SHOW</enum>
-               </property>
                <property name="commands" stdset="0">
                 <stringlist>
                  <string>python autofocus.py Teslong:cam1: 15IDD:m7 0.2</string>
@@ -1119,9 +1113,6 @@
              </property>
              <property name="channel" stdset="0">
               <string/>
-             </property>
-             <property name="colorMap" stdset="0">
-              <enum>PyDMImageView::Monochrome</enum>
              </property>
              <property name="autoDownsample" stdset="0">
               <bool>true</bool>
@@ -1386,7 +1377,11 @@
             </widget>
            </item>
            <item>
-            <widget class="QLineEdit" name="localMountLineEdit"/>
+            <widget class="QLineEdit" name="localMountLineEdit">
+             <property name="text">
+              <string>/Users/mrinalkb/Data-1</string>
+             </property>
+            </widget>
            </item>
            <item>
             <widget class="QLabel" name="label_6">
@@ -1402,7 +1397,11 @@
             </widget>
            </item>
            <item>
-            <widget class="QLineEdit" name="chemmat92MountLineEdit"/>
+            <widget class="QLineEdit" name="chemmat92MountLineEdit">
+             <property name="text">
+              <string>/home/mrinalkb/cars6/Data</string>
+             </property>
+            </widget>
            </item>
            <item>
             <widget class="QLabel" name="label_7">
@@ -1486,7 +1485,7 @@
   <customwidget>
    <class>PlotWidget</class>
    <extends>QWidget</extends>
-   <header>pyqtgraph</header>
+   <header>PlotWidget</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

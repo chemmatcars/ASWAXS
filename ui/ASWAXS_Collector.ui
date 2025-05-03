@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1175</width>
+    <width>1299</width>
     <height>811</height>
    </rect>
   </property>
@@ -17,7 +17,7 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>2</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="tab">
       <attribute name="title">
@@ -66,7 +66,7 @@
           <string>{}</string>
          </property>
          <property name="filename" stdset="0">
-          <string>Sample_View.ui</string>
+          <string>Sample_View</string>
          </property>
          <property name="loadWhenShown" stdset="0">
           <bool>true</bool>
@@ -95,7 +95,7 @@
           <string>{}</string>
          </property>
          <property name="filename" stdset="0">
-          <string>Bluesky_Client.ui</string>
+          <string>Bluesky_Client</string>
          </property>
          <property name="loadWhenShown" stdset="0">
           <bool>true</bool>

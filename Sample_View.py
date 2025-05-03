@@ -5,12 +5,14 @@ import cv2
 from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QMessageBox, QFileDialog, QApplication, QWidget
 from PyQt5 import uic
+from PyQt5.QtGui import QCloseEvent
 import pyqtgraph as pg
-from epics import Motor
+from epics import Motor, PV
 import numpy as np
 import paramiko
 from pydm.widgets.frame import PyDMFrame
 import time
+import atexit
 from tempfile import TemporaryFile
 
 class Sample_View(Display):
@@ -23,11 +25,16 @@ class Sample_View(Display):
         self.ui.tabWidget.setCurrentIndex(0)
         # self.positionPlot.setLabels(left='Sp_Y (mm)', bottom='Sp_X (mm)')
         # self.positionPlot.addLegend()
-
-        self.cf = float(self.ui.cfLineEdit.text())
+        with open('./Data/camera_calib.txt', 'r') as fh:
+            line=fh.readlines()
+            self.cf=float(line[1].strip().split('=')[1])
+        self.ui.cfLineEdit.setText(f'{self.cf:.6f}')
+        # self.cf = float(self.ui.cfLineEdit.text())
         self.zmotor = Motor("15IDD:m7")
         self.xmotor = Motor('15IDD:m19')
         self.ymotor = Motor('15IDD:m18')
+        self.detAcquire = PV('Teslong:cam1:Acquire')
+        self.detAcquire.put(1)
         self.roisize = int(self.ui.roiSizeLineEdit.text())
         self.offsetFactor = 1. / 3.3538
         self.calibrationFlag = False
@@ -50,6 +57,10 @@ class Sample_View(Display):
         self.positions = []
         self.position_labels = [self.ui.SpX_PyDMLabel, self.ui.SpY_PyDMLabel, self.ui.CMIR_PyDMLabel]
         self.chan = [label.channel for label in self.position_labels]
+        atexit.register(self.stopAcquire)
+
+    def stopAcquire(self):
+        self.detAcquire.put(0)
 
 
     def ui_filename(self):
@@ -99,6 +110,9 @@ class Sample_View(Display):
             return
         distance = np.sqrt((self.pos1[0]-self.pos2[0])**2+(self.pos1[1]-self.pos2[1])**2)
         self.cf = np.round(knownDistance/distance,6)
+        with open('./Data/camera_calib.txt', 'w') as fh:
+            fh.write(f'#Calibration saved on {time.asctime()}\n')
+            fh.write(f'cf={self.cf:.6f}')
         self.cfLineEdit.setText(f'{self.cf:.6f}')
         self.calibrationFlag = False
         self.calibrationPoints.hide()
@@ -134,18 +148,15 @@ class Sample_View(Display):
         :return:
         """
         image = np.array(image, dtype=np.uint8)
-        # if image.ndim == 3:
-        try:
+        if image.ndim==3:
             timage = image.reshape((self.image_height, self.image_width, 3))
-        except:
+        else:
             self.image_height = int(image.size / self.image_width / 3)
             self.centerYLine.setValue(self.image_height / 2)
             timage = image.reshape((self.image_height, self.image_width, 3))
             self.imageCenterX = int(self.image_width / 2)
             self.imageCenterY = int(self.image_height / 2)
         image = cv2.cvtColor(timage, cv2.COLOR_BGR2GRAY)
-        # else:
-        #    self.image_height = int(image.size/self.image_width)
         self.image = image
         self.focusParameter()
         return timage
@@ -271,6 +282,9 @@ class Sample_View(Display):
         """
         try:
             self.cf = float(self.ui.cfLineEdit.text())
+            with open('./Data/camera_calib.txt', 'r') as fh:
+                fh.write(f'#Calibration saved on {time.asctime()}\n')
+                fh.write(f'cf={self.cf:.6f}')
         except:
             QMessageBox.warning(self, 'Value Error', 'Enter numbers only')
             self.ui.cfLineEdit.setText('%.5f' % self.cf)
