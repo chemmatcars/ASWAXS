@@ -1,22 +1,27 @@
 from os import path
+
+from event_model import SCHEMA_NAMES
 from pydm import Display
 from PyQt5.QtCore import QTimer
-from PyQt5.QtWidgets import QMessageBox, QFileDialog, QApplication
+from PyQt5.QtWidgets import QMessageBox, QFileDialog, QApplication, QWidget
 from PyQt5.QtCore import pyqtSignal
+from PyQt5 import uic
 import threading
 import copy
 import numpy as np
+import sys
 
 from bluesky_kafka import RemoteDispatcher
 from kafka import KafkaConsumer
 
-class ScanPlotter(Display):
+class ScanPlotter(QWidget):
     scan_started = pyqtSignal(dict)
     event_received = pyqtSignal(dict)
     scan_stopped = pyqtSignal(dict)
 
-    def __init__(self, parent=None, args=None, macros=None):
-        super(ScanPlotter, self).__init__(parent=parent, args=args, macros=None)
+    def __init__(self, parent=None):
+        super(ScanPlotter, self).__init__(parent=parent)
+        self.ui = uic.loadUi('ui/ScanPlotter.ui', self)
         self.init_signals()
         self.kafka_dispatcher_thread = threading.Thread(target=self.start_kafka_dispatcher)
         self.kafka_dispatcher_thread.daemon = True
@@ -26,21 +31,66 @@ class ScanPlotter(Display):
         self.live_XAxis = 'None'
         self.live_norm = 'None'
         self.live_YAxis = []
-
-
-    def ui_filename(self):
-        return 'ui/ScanPlotter.ui'
-
-    def ui_filepath(self):
-        return path.join(path.dirname(path.realpath(__file__)), self.ui_filename())
+        self.expDir = path.abspath('./Data/')
+        self.startExperiment(expDir=self.expDir)
 
     def init_signals(self):
+        self.ui.newExperimentPushButton.clicked.connect(lambda x: self.startExperiment(expDir = None))
+        self.ui.loadExperimentPushButton.clicked.connect(lambda x: self.loadExperiment(expDir = None))
+        self.ui.DB_scanListWidget.itemSelectionChanged.connect(self.DBItemSelectionChanged)
+
         self.scan_started.connect(self.scan_start)
         self.event_received.connect(self.event_receipt)
         self.scan_stopped.connect(self.scan_stop)
         self.ui.live_XAxisComboBox.currentTextChanged.connect(self.live_XAxisChanged)
         self.ui.live_normComboBox.currentTextChanged.connect(self.live_normChanged)
         self.ui.live_YAxisListWidget.itemSelectionChanged.connect(self.live_YAxisChanged)
+
+    def startExperiment(self, expDir = None):
+        if expDir is None:
+            self.expDir = QFileDialog.getExistingDirectory(self, 'Start new experimental directory')
+            if path.exists(path.join(self.expDir, 'expRecord.txt')):
+                QMessageBox.warning(self,'Directory Error', 'This is an exiting experimental directory. Create a new experimental '
+                                                            'directory to start a new experiments')
+                self.startExperiment(expDir = None)
+            else:
+                self.expfh = open(path.join(self.expDir, 'expRecord.txt'),'w')
+                self.experimentFolderLineEdit.setText(f'{self.expDir}')
+                self.scan_num = 0
+        else:
+            self.expDir = expDir
+            self.experimentFolderLineEdit.setText(self.expDir)
+            self.expfh = open(path.join(self.expDir, 'expRecord.txt'), 'w')
+            self.scan_num = 0
+
+    def loadExperiment(self, expDir = None):
+        if expDir is None:
+            self.expDir = QFileDialog.getExistingDirectory(self, 'Start new experimental directory')
+        else:
+            self.expDir = expDir
+        self.ui.DB_scanListWidget.itemSelectionChanged.disconnect()
+        if path.exists(path.join(self.expDir, 'expRecord.txt')):
+            with open(path.join(self.expDir, 'expRecord.txt'), 'r') as fh:
+                lines = fh.readlines()
+                if len(lines)>0:
+                    self.DB_scanListWidget.clear()
+                    for line in lines:
+                        self.DB_scanListWidget.addItem(line.strip())
+                    self.scan_num = len(lines)
+                else:
+                    self.scan_num = 0
+            self.ui.DB_scanListWidget.itemSelectionChanged.connect(self.DBItemSelectionChanged)
+            self.expfh = open(path.join(self.expDir, 'expRecord.txt'), 'a')
+            self.ui.experimentFolderLineEdit.setText(self.expDir)
+        else:
+            self.expDir = self.ui.experimentFolderLineEdit.text()
+
+
+
+    def DBItemSelectionChanged(self):
+        pass
+
+
 
     def start_kafka_dispatcher(self):
         self.kafka_dispatcher = RemoteDispatcher(['bluesky_aswaxs'],
@@ -55,13 +105,17 @@ class ScanPlotter(Display):
             self.scan_started.emit(doc)
         elif name == 'event':
             self.event_received.emit(doc)
-        else:
+        elif name == 'stop':
             self.scan_stopped.emit(doc)
+        else:
+            print(f'{name}: {doc}')
 
     def scan_start(self, doc):
         self.liveData = {'time':[]}
         self.live_started = True
-        print('scan started')
+        self.scan_uid = doc['uid']
+        self.scan_num += 1
+        print(f'S {self.scan_num}: {self.scan_uid}')
 
     def event_receipt(self, doc):
         self.liveData['time'].append(doc['time'])
@@ -135,11 +189,18 @@ class ScanPlotter(Display):
         self.live_scanPlotWidget.Plot(plot_keys)
 
     def scan_stop(self, doc):
-        pass
+        self.expfh.write(f'S {self.scan_num}: {self.scan_uid}\n')
+        self.expfh.flush()
+        self.DB_scanListWidget.addItem(f'S {self.scan_num}: {self.scan_uid}')
 
 
 
 
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    w = ScanPlotter()
+    w.show()
+    sys.exit(app.exec_())
 
 
 

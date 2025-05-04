@@ -397,14 +397,7 @@
    <item>
     <layout class="QVBoxLayout" name="verticalLayout">
      <item>
-      <widget class="PyDMEmbeddedDisplay" name="PyDMEmbeddedDisplay">
-       <property name="toolTip">
-        <string/>
-       </property>
-       <property name="filename" stdset="0">
-        <string>ScanPlotter.ui</string>
-       </property>
-      </widget>
+      <widget class="ScanPlotter" name="scanPlotter" native="true"/>
      </item>
      <item>
       <widget class="QTabWidget" name="consoleTabWidget">
@@ -421,7 +414,7 @@
         </size>
        </property>
        <property name="currentIndex">
-        <number>0</number>
+        <number>1</number>
        </property>
        <widget class="QWidget" name="tab_5">
         <attribute name="title">
@@ -497,11 +490,6 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>PyDMEmbeddedDisplay</class>
-   <extends>QFrame</extends>
-   <header>pydm.widgets.embedded_display</header>
-  </customwidget>
-  <customwidget>
    <class>PyDMFrame</class>
    <extends>QFrame</extends>
    <header>pydm.widgets.frame</header>
@@ -511,6 +499,12 @@
    <class>ConsoleWidget</class>
    <extends>QTextEdit</extends>
    <header>JupyterConsole</header>
+  </customwidget>
+  <customwidget>
+   <class>ScanPlotter</class>
+   <extends>QWidget</extends>
+   <header>ScanPlotter</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources/>

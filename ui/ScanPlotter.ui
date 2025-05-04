@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>Form</class>
- <widget class="PyDMFrame" name="Form">
+ <widget class="QWidget" name="Form">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>836</width>
-    <height>652</height>
+    <width>837</width>
+    <height>656</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -178,7 +178,7 @@
             </size>
            </property>
            <property name="selectionMode">
-            <enum>QAbstractItemView::ContiguousSelection</enum>
+            <enum>QAbstractItemView::MultiSelection</enum>
            </property>
           </widget>
          </item>
@@ -226,7 +226,7 @@
             </layout>
            </item>
            <item>
-            <widget class="QListWidget" name="scanListWidget">
+            <widget class="QListWidget" name="DB_scanListWidget">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
                <horstretch>0</horstretch>
@@ -234,7 +234,7 @@
               </sizepolicy>
              </property>
              <property name="selectionMode">
-              <enum>QAbstractItemView::ContiguousSelection</enum>
+              <enum>QAbstractItemView::MultiSelection</enum>
              </property>
             </widget>
            </item>
@@ -320,7 +320,7 @@
               </size>
              </property>
              <property name="selectionMode">
-              <enum>QAbstractItemView::ContiguousSelection</enum>
+              <enum>QAbstractItemView::MultiSelection</enum>
              </property>
             </widget>
            </item>
@@ -335,12 +335,6 @@
   </layout>
  </widget>
  <customwidgets>
-  <customwidget>
-   <class>PyDMFrame</class>
-   <extends>QFrame</extends>
-   <header>pydm.widgets.frame</header>
-   <container>1</container>
-  </customwidget>
   <customwidget>
    <class>PlotWidget</class>
    <extends>QWidget</extends>
