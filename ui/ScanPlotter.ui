@@ -73,7 +73,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="lineEdit">
+      <widget class="QLineEdit" name="sampleDescriptionLineEdit">
        <property name="placeholderText">
         <string>None</string>
        </property>

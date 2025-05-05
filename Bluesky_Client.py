@@ -689,6 +689,15 @@ class Bluesky_Client(Display):
         else:
             akwrgs = eval(self.planEditor.planArgsTextEdit.toPlainText().strip())
             item = {'name': planName, 'item_type': planType, 'args': akwrgs['args'], 'kwargs': akwrgs['kwargs']}
+        expDir = self.ui.scanPlotter.experimentFolderLineEdit.text()
+        sampleName = self.ui.scanPlotter.sampleNameLineEdit.text()
+        sampleDescription = self.ui.scanPlotter.sampleDescriptionLineEdit.text()
+        try:
+            item['kwargs']['md']['expDir'] = expDir
+            item['kwargs']['md']['sampleName'] = sampleName
+            item['kwargs']['md']['sampleDescription'] = sampleDescription
+        except:
+            item['kwargs']['md']={'expDir': expDir, 'sampleName': sampleName, 'sampleDescription': sampleDescription}
         if type(item) == dict:
             request = {"method": "queue_item_add",
                        "params": {'item': item, 'pos': qpos, 'user_group': 'primary', 'user': 'Default User'}}
@@ -730,6 +739,15 @@ class Bluesky_Client(Display):
             return
         item['args'] = akwrgs['args']
         item['kwargs'] = akwrgs['kwargs']
+        expDir = self.ui.scanPlotter.experimentFolderLineEdit.text()
+        sampleName = self.ui.scanPlotter.sampleNameLineEdit.text()
+        sampleDescription = self.ui.scanPlotter.sampleDescriptionLineEdit.text()
+        try:
+            item['kwargs']['md']['expDir'] = expDir
+            item['kwargs']['md']['sampleName'] = sampleName
+            item['kwargs']['md']['sampleDescription'] = sampleDescription
+        except:
+            item['kwargs']['md'] = {'expDir': expDir, 'sampleName': sampleName, 'sampleDescription': sampleDescription}
         if type(item) == dict:
             request = {"method": "queue_item_update", "params": {'item':item, 'user_group':'primary', 'user':'Default User'}}
             response = self.send_zmq_request(request)
