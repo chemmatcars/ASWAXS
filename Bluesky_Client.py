@@ -568,6 +568,10 @@ class Bluesky_Client(Display):
         return response
 
     def startQueue(self):
+        expDir = self.ui.scanPlotter.experimentFolderLineEdit.text()
+        sampleName = self.ui.scanPlotter.sampleNameLineEdit.text()
+        sampleDescription = self.ui.scanPlotter.sampleDescriptionLineEdit.text()
+        self.silentModifyPlanInQueue(expDir, sampleName, sampleDescription)
         request = {"method": "queue_start", "params": {}}
         response = self.send_zmq_request(request)
         if response.get("success"):
@@ -763,6 +767,18 @@ class Bluesky_Client(Display):
                 self.planEditor.close()
             else:
                 QMessageBox.critical(self, 'Error', response.get("msg", 'Failed to update the %s: %s.'%(planType, planName)))
+
+    def silentModifyPlanInQueue(self, expDir, sampleName, sampleDescription):
+        for item in self.queue_items:
+            try:
+                item['kwargs']['md']['expDir'] = expDir
+                item['kwargs']['md']['sampleName'] = sampleName
+                item['kwargs']['md']['sampleDescription'] = sampleDescription
+            except:
+                item['kwargs']['md'] = {'expDir': expDir, 'sampleName': sampleName, 'sampleDescription': sampleDescription}
+            request = {"method": "queue_item_update", "params": {'item':item, 'user_group':'primary', 'user':'Default User'}}
+            self.send_zmq_request(request)
+
 
 
 if __name__ == "__main__":

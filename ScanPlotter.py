@@ -213,15 +213,15 @@ class ScanPlotter(QWidget):
         elif name == 'stop':
             self.scan_stopped.emit(doc)
         else:
-            print(f'{name}: {doc}')
-        self.specWriter.receiver(name, doc)
+            pass#print(f'{name}: {doc}')
+        # self.specWriter.receiver(name, doc)
 
     def scan_start(self, doc):
         self.liveData = {'time':[]}
         self.live_started = True
         self.scan_uid = doc['uid']
         self.scan_num += 1
-        print(f'S {self.scan_num}: {self.scan_uid}')
+        # print(f'S {self.scan_num}: {self.scan_uid}')
 
     def event_receipt(self, doc):
         self.liveData['time'].append(doc['time'])
