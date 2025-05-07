@@ -14,8 +14,8 @@ import pathlib
 import databroker
 from apstools.callbacks import SpecWriterCallback
 
+
 from bluesky_kafka import RemoteDispatcher
-from kafka import KafkaConsumer
 
 class ScanPlotter(QWidget):
     scan_started = pyqtSignal(dict)
@@ -298,6 +298,8 @@ class ScanPlotter(QWidget):
         self.expfh.write(f'S {self.scan_num}: {self.scan_uid}\n')
         self.expfh.flush()
         self.DB_scanListWidget.addItem(f'S {self.scan_num}: {self.scan_uid}')
+
+
 
 
 if __name__ == '__main__':

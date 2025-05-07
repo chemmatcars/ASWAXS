@@ -5,21 +5,22 @@ from PyQt5.QtWidgets import QWidget, QApplication, QMessageBox, QFileDialog, QMe
 from PyQt5.QtCore import pyqtSignal, Qt, QThread
 from PyQt5.QtGui import QTextCursor
 from pydm import Display
-from bluesky_queueserver import bind_plan_arguments
-from pandas.core.methods.describe import select_describe_func
-from pydm.widgets.frame import PyDMFrame
+# from bluesky_queueserver import bind_plan_arguments
+# from pandas.core.methods.describe import select_describe_func
+# from pydm.widgets.frame import PyDMFrame
 from bluesky_queueserver_api.zmq import REManagerAPI
 from PyQt5.QtCore import QThread, pyqtSignal
-from importlib import import_module
-import inspect
+# from importlib import import_module
+# import inspect
 import threading
 import zmq
 import json
 import time
-import lmfit
+# import lmfit
 import copy
 import sys
 import paramiko
+
 
 
 
@@ -92,6 +93,9 @@ class Bluesky_Client(Display):
 
         self.ui.queueTabWidget.setCurrentIndex(0)
         self.ui.consoleTabWidget.setCurrentIndex(1)
+
+        self.scanPlotter.DB_scanPlotWidget.mouseDoubleClicked.connect(self.DBPlotDoubleClicked)
+        self.scanPlotter.live_scanPlotWidget.mouseDoubleClicked.connect(self.livePlotDoubleClicked)
 
     def changeQueueMode(self):
         if self.ui.loopQueueCheckBox.isChecked():
@@ -607,7 +611,8 @@ class Bluesky_Client(Display):
             self.planEditor.planTypeComboBox.addItem(planType)
             self.planEditor.planTypeComboBox.setEnabled(False)
             self.planEditor.addPushButton.setText('Modify')
-            self.planEditor.planArgsTextEdit.setText(str({key: item[key] for key in ['args', 'kwargs']}))
+            #self.planEditor.planArgsTextEdit.setText(str({key: item[key] for key in ['args', 'kwargs']}))
+            self.planEditor.planArgsTextEdit.setText(f'{item}')
         else:
             planName = self.ui.planComboBox.currentText()
             planType = self.planEditor.planTypeComboBox.currentText()
@@ -619,7 +624,8 @@ class Bluesky_Client(Display):
             except:
                 item['args']=[]
                 item['kwargs']={}
-                self.planEditor.planArgsTextEdit.setText(str({key: item[key] for key in ['args', 'kwargs']}))
+                #self.planEditor.planArgsTextEdit.setText(str({key: item[key] for key in ['args', 'kwargs']}))
+                self.planEditor.planArgsTextEdit.setText(f'{item}')
         self.planEditor.setWindowTitle(planName)
         self.planEditor.planHelpTextEdit.setReadOnly(True)
 
@@ -696,11 +702,11 @@ class Bluesky_Client(Display):
         expDir = self.ui.scanPlotter.experimentFolderLineEdit.text()
         sampleName = self.ui.scanPlotter.sampleNameLineEdit.text()
         sampleDescription = self.ui.scanPlotter.sampleDescriptionLineEdit.text()
-        try:
+        if 'md' in item['kwargs'].keys():
             item['kwargs']['md']['expDir'] = expDir
             item['kwargs']['md']['sampleName'] = sampleName
             item['kwargs']['md']['sampleDescription'] = sampleDescription
-        except:
+        else:
             item['kwargs']['md']={'expDir': expDir, 'sampleName': sampleName, 'sampleDescription': sampleDescription}
         if type(item) == dict:
             request = {"method": "queue_item_add",
@@ -746,12 +752,12 @@ class Bluesky_Client(Display):
         expDir = self.ui.scanPlotter.experimentFolderLineEdit.text()
         sampleName = self.ui.scanPlotter.sampleNameLineEdit.text()
         sampleDescription = self.ui.scanPlotter.sampleDescriptionLineEdit.text()
-        try:
+        if 'md' in item['kwargs'].keys():
             item['kwargs']['md']['expDir'] = expDir
             item['kwargs']['md']['sampleName'] = sampleName
             item['kwargs']['md']['sampleDescription'] = sampleDescription
-        except:
-            item['kwargs']['md'] = {'expDir': expDir, 'sampleName': sampleName, 'sampleDescription': sampleDescription}
+        else:
+             item['kwargs']['md'] = {'expDir': expDir, 'sampleName': sampleName, 'sampleDescription': sampleDescription}
         if type(item) == dict:
             request = {"method": "queue_item_update", "params": {'item':item, 'user_group':'primary', 'user':'Default User'}}
             response = self.send_zmq_request(request)
@@ -770,14 +776,48 @@ class Bluesky_Client(Display):
 
     def silentModifyPlanInQueue(self, expDir, sampleName, sampleDescription):
         for item in self.queue_items:
-            try:
+            if 'md' in item['kwargs'].keys():
                 item['kwargs']['md']['expDir'] = expDir
                 item['kwargs']['md']['sampleName'] = sampleName
                 item['kwargs']['md']['sampleDescription'] = sampleDescription
-            except:
+            else:
                 item['kwargs']['md'] = {'expDir': expDir, 'sampleName': sampleName, 'sampleDescription': sampleDescription}
             request = {"method": "queue_item_update", "params": {'item':item, 'user_group':'primary', 'user':'Default User'}}
             self.send_zmq_request(request)
+
+    def livePlotDoubleClicked(self, x, y):
+        motor = self.scanPlotter.live_XAxis
+        buttonReply = QMessageBox.question(self, 'Move', f"Do you like to move {motor} to {x}?",
+                                           QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if buttonReply == QMessageBox.Yes:
+            item = {'name': 'mv', 'item_type': 'plan', 'args': [motor, x], 'kwargs': {}}
+            if type(item) == dict:
+                request = {"method": "queue_item_execute",
+                           "params": {'item': item, 'user_group': 'primary', 'user': 'Default User'}}
+                response = self.send_zmq_request(request)
+                print(response)
+                if response.get('success'):
+                    QMessageBox.information(self, 'Success', f'{motor} moved to {x}')
+                else:
+                    QMessageBox.critical(self, 'Failed', f'{motor} couldnot move.\n %s' % response.get('msg'))
+
+
+
+    def DBPlotDoubleClicked(self, x, y):
+        motor = self.scanPlotter.DB_XAxis
+        buttonReply = QMessageBox.question(self, 'Move', f"Do you like to move {motor} to {x}?",
+                                           QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if buttonReply == QMessageBox.Yes:
+            item = {'name': 'mv', 'item_type': 'plan', 'args': [motor, x], 'kwargs': {}}
+            if type(item) == dict:
+                request = {"method": "queue_item_execute",
+                           "params": {'item': item, 'user_group': 'primary', 'user': 'Default User'}}
+                response = self.send_zmq_request(request)
+                print(response)
+                if response.get('success'):
+                    QMessageBox.information(self, 'Success', f'{motor} moved to {x}')
+                else:
+                    QMessageBox.critical(self, 'Failed', f'{motor} couldnot move.\n %s' % response.get('msg'))
 
 
 
