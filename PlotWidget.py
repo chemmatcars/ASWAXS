@@ -1,6 +1,6 @@
 import pyqtgraph as pg
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QMessageBox, QLineEdit, QColorDialog, QCheckBox, QApplication
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, pyqtSignal
 import numpy as np
 import sys
 from pyqtgraph.widgets.MatplotlibWidget import MatplotlibWidget
@@ -8,11 +8,13 @@ import copy
 
 
 class PlotWidget(QWidget):
+    mouseDoubleClicked = pyqtSignal(float,float)
     """
     This class inherited from pyqtgraphs Plotwidget and MatplotlibWidget and adds additional compononets like:
         1) Cross-hair to view X, Y coordinates
         2) Changing plot-styles interactively
     """
+
     def __init__(self,parent=None,matplotlib=False):
         QWidget.__init__(self,parent)
         self.matplotlib=matplotlib
@@ -75,9 +77,17 @@ class PlotWidget(QWidget):
             self.plotWidget.draw()
         else:
             self.plotWidget=pg.PlotWidget()
-            self.plotWidget.getPlotItem().vb.scene().sigMouseMoved.connect(self.mouseMoved)
             self.legendItem=pg.LegendItem(offset=(0.0,1.0))
             self.legendItem.setParentItem(self.plotWidget.getPlotItem())
+            self.cursorXLine = pg.InfiniteLine(pos=0, angle=90, pen=pg.mkPen('w'))
+            self.cursorYLine = pg.InfiniteLine(pos=0, angle=0, pen=pg.mkPen('w'))
+            self.viewBox = self.plotWidget.getViewBox()
+            self.viewBox.addItem(self.cursorXLine, ignoreBounds = True)
+            self.viewBox.addItem(self.cursorYLine, ignoreBounds = True)
+            self.cursorXLine.hide()
+            self.cursorYLine.hide()
+            self.viewBox.scene().sigMouseMoved.connect(self.mouseMoved)
+            self.viewBox.scene().sigMouseClicked.connect(self.mouseClicked)
             
         self.plotLayout.addWidget(self.plotWidget,row=row,col=col,colspan=6)
         row+=1
@@ -94,8 +104,8 @@ class PlotWidget(QWidget):
         self.plotLayout.addWidget(self.xLogCheckBox,row=row,col=4)
         self.plotLayout.addWidget(self.yLogCheckBox,row=row,col=5)
         
-        
-        
+
+
     def bgCheckBoxChanged(self):
         if self.bgCheckBox.isChecked():
             self.plotWidget.setBackground('w')
@@ -110,16 +120,20 @@ class PlotWidget(QWidget):
             self.plotWidget.getAxis('bottom').setPen('w')
             self.plotWidget.getAxis('bottom').setTextPen('w')
 
+    def mouseClicked(self, event):
+        if event._double:
+            self.mouseDoubleClicked.emit(self.mouse_x, self.mouse_y)
+
 
     def mouseMoved(self,pos):
         try:
             pointer=self.plotWidget.getPlotItem().vb.mapSceneToView(pos)
-            x,y=pointer.x(),pointer.y()
+            self.mouse_x, self.mouse_y=pointer.x(),pointer.y()
             if self.plotWidget.getPlotItem().ctrl.logXCheck.isChecked():
-                x=10**x
+                self.mouse_x=10**self.mouse_x
             if self.plotWidget.getPlotItem().ctrl.logYCheck.isChecked():
-                y=10**y
-            self.crosshairLabel.setText('X={: 10.5f}, Y={: 10.5e}'.format(x,y))
+                self.mouse_y=10**self.mouse_y
+            self.crosshairLabel.setText('X={: 10.5f}, Y={: 10.5e}'.format(self.mouse_x, self.mouse_y))
             # if x>1e-3 and y>1e-3:
             #     self.crosshairLabel.setText(u'X={: .5f} , Y={: .5f}'.format(x,y))
             # if x<1e-3 and y>1e-3:
@@ -128,7 +142,13 @@ class PlotWidget(QWidget):
             #     self.crosshairLabel.setText(u'X={: .5f} , Y={: .3e}'.format(x,y))
             # if x<1e-3 and y<1e-3:
             #     self.crosshairLabel.setText(u'X={: .3e} , Y={: .3e}'.format(x,y))
+            self.cursorXLine.setValue(self.mouse_x)
+            self.cursorYLine.setValue(self.mouse_y)
+            self.cursorXLine.show()
+            self.cursorYLine.show()
         except:
+            self.cursorYLine.hide()
+            self.cursorXLine.hide()
             pass
                 
         #self.crosshairLabel.setText(u'X=%+0.5f, Y=%+0.5e'%(x,y))
