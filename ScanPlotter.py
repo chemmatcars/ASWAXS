@@ -24,7 +24,7 @@ class ScanPlotter(QWidget):
 
     def __init__(self, parent=None):
         super(ScanPlotter, self).__init__(parent=parent)
-        self.ui = uic.loadUi('ui/ScanPlotter.ui', self)
+        self.ui = uic.loadUi(path.abspath('./ui/ScanPlotter.ui'), self)
         self.init_signals()
         self.kafka_dispatcher_thread = threading.Thread(target=self.start_kafka_dispatcher)
         self.kafka_dispatcher_thread.daemon = True
@@ -213,7 +213,8 @@ class ScanPlotter(QWidget):
         elif name == 'stop':
             self.scan_stopped.emit(doc)
         else:
-            pass#print(f'{name}: {doc}')
+            pass
+        # print(f'{name}: {doc}')
         # self.specWriter.receiver(name, doc)
 
     def scan_start(self, doc):
