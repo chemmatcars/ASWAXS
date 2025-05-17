@@ -153,7 +153,7 @@ def capture_live_image(position_csv_path,
             'expDir':'/cars6/Data/chemdata/ASWAXS/Software/ASWAXS/Data'
            }
     _md.update(md)
-    @run_decorator(md = _md)
+    @run_decorator(md = md)
     def inner_function():
          yield from capture_images_from_list(
             position_csv_path,
