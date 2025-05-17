@@ -1,4 +1,4 @@
-import os.path
+import os
 
 from PyQt5.uic import loadUi
 from PyQt5.QtWidgets import QWidget, QApplication, QMessageBox, QFileDialog, QMessageBox, QDesktopWidget, QMainWindow, QDialog
@@ -20,7 +20,7 @@ import time
 import copy
 import sys
 import paramiko
-
+import socket
 
 
 
@@ -120,40 +120,44 @@ class Bluesky_Client(Display):
         self.queueMonitoring = False
         time.sleep(2)
         self.closeEnv()
-
         hostname = "164.54.169.92"
-        username = "mrinalkb"
-        key_filename = '/Users/mrinalkb/.ssh/mykey'
-        port = 22  # Default SSH port
-
-        client = paramiko.SSHClient()
-        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())  # Automatically add the host key (for testing purposes only)
-
-        try:
-            client.connect(hostname, port=port, username=username, key_filename = key_filename)
-            print(f"Connected to {hostname}")
-        except Exception as e:
-            print(f"Connection error: {e}")
-            exit()
         command = "systemctl --user restart queue-server-aswaxs.service"
 
-        try:
-            stdin, stdout, stderr = client.exec_command(command)
+        if hostname != socket.gethostbyname(socket.gethostname()):
+            username = "mrinalkb"
+            key_filename = '/Users/mrinalkb/.ssh/mykey'
+            port = 22  # Default SSH port
 
-            # Read output
-            output = stdout.read().decode("utf-8")
-            error = stderr.read().decode("utf-8")
+            client = paramiko.SSHClient()
+            client.set_missing_host_key_policy(paramiko.AutoAddPolicy())  # Automatically add the host key (for testing purposes only)
 
-            print("Output:")
-            print(output)
-            if error:
-                print("Error:")
-                print(error)
-        except Exception as e:
-            print(f"Command execution error: {e}")
-        finally:
-            client.close()
-            print("Connection closed")
+            try:
+                client.connect(hostname, port=port, username=username, key_filename = key_filename)
+                print(f"Connected to {hostname}")
+            except Exception as e:
+                print(f"Connection error: {e}")
+                exit()
+
+
+            try:
+                stdin, stdout, stderr = client.exec_command(command)
+
+                # Read output
+                output = stdout.read().decode("utf-8")
+                error = stderr.read().decode("utf-8")
+
+                print("Output:")
+                print(output)
+                if error:
+                    print("Error:")
+                    print(error)
+            except Exception as e:
+                print(f"Command execution error: {e}")
+            finally:
+                client.close()
+                print("Connection closed")
+        else:
+            os.system(command)
         self.startEnv()
         self.messageTransfer = True
         self.queueMonitoring = True
