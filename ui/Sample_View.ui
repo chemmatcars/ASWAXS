@@ -1379,7 +1379,7 @@
            <item>
             <widget class="QLineEdit" name="localMountLineEdit">
              <property name="text">
-              <string>/Users/mrinalkb/Data-1</string>
+              <string>/home/che_epics/chemdata2/Data</string>
              </property>
             </widget>
            </item>
@@ -1399,7 +1399,7 @@
            <item>
             <widget class="QLineEdit" name="chemmat92MountLineEdit">
              <property name="text">
-              <string>/home/mrinalkb/cars6/Data</string>
+              <string>/home/che_epics/chemdata2/Data</string>
              </property>
             </widget>
            </item>

@@ -1,1 +1,1 @@
-{'args': ['/home/chem_epics/cars6/chemmat/Data/ASWAXS/Software/ASWAXS/Data/temp.csv', 'test', 1, 10], 'kwargs': {'position_test': False, 'md': {'sampleName': '', 'sampleDescription': '', 'expDir': '/Users/mrinalkb/Data-1/chemmat/ASWAXS/Software/ASWAXS/Data'}}}
+{'args': ['/home/chem_epics/chemdata2/Data/ASWAXS/Software/ASWAXS/Data/temp.csv', 'test', 1, 200], 'kwargs': {'position_test': False, 'md': {'sampleName': '', 'sampleDescription': '', 'expDir': '/home/chem_epics/chemdata2/Data/ASWAXS/Data'}}}

@@ -13,7 +13,9 @@ import paramiko
 from pydm.widgets.frame import PyDMFrame
 import time
 import atexit
+import socket
 from tempfile import TemporaryFile
+import subprocess
 
 class Sample_View(Display):
     def __init__(self, parent=None, args=None, macros=None):
@@ -424,53 +426,61 @@ class Sample_View(Display):
         print(f'temp path is {lifname}')
         # lifname = QFileDialog.getOpenFileName(self, "Open input file", "Select the file for input", "Input Files (*.pos)")[0]
         if os.path.exists(lifname):
-            ifname=lifname.replace(localMount, chemmat92Mount)
+            ifname = lifname.replace(localMount, chemmat92Mount)
             print(f'local mount is {localMount}')
-            ifname = ifname.replace('\\','/')
+            ifname = ifname.replace('\\', '/')
             print(f'server temp path is {ifname}')
             lofname = QFileDialog.getSaveFileName(self, "Save output as", "./Data", "Output Files (*.csv *.txt)")[0]
             if lofname != "":
                 if os.path.splitext(lofname)[1] == "":
                     lofname += "*.csv"
                 ofname = lofname.replace(localMount, chemmat92Mount)
-        hostname = "164.54.169.92"
-        username = "mrinalkb"
-        key_filename = '/Users/mrinalkb/.ssh/mykey'
-        port = 22  # Default SSH port
-
-        client = paramiko.SSHClient()
-        client.set_missing_host_key_policy(
-            paramiko.AutoAddPolicy())  # Automatically add the host key (for testing purposes only)
-
-        try:
-            client.connect(hostname, port=port, username=username, key_filename=key_filename)
-            print(f"Connected to {hostname}")
-        except Exception as e:
-            print(f"Connection error: {e}")
-            exit()
-        command = f"python /home/mrinalkb/cars6/Data/chemmat/ASWAXS/Software/ASWAXS/Scripts/Run_Blender.py {ifname} {ofname} {spacing:0.2f}"
-
-        try:
-            stdin, stdout, stderr = client.exec_command(command)
-
-            # Read output
-            output = stdout.read().decode("utf-8")
-            error = stderr.read().decode("utf-8")
-
-            print("Output:")
-            print(output)
-            if error:
-                print("Error:")
-                print(error)
-        except Exception as e:
-            print(f"Command execution error: {e}")
-        finally:
-            client.close()
-            print("Connection closed")
         os.remove(lifname)
+        hostname = "164.54.169.92"
+        username = "chem_epics"
+        key_filename = '/home/chem_epics/.ssh/mykey'
+        port = 22  # Default SSH port
+        if socket.gethostbyaddr(socket.gethostname())[2][0] != hostname:
+            client = paramiko.SSHClient()
+            client.set_missing_host_key_policy(
+                paramiko.AutoAddPolicy())  # Automatically add the host key (for testing purposes only)
+
+            try:
+                client.connect(hostname, port=port, username=username, key_filename=key_filename)
+                print(f"Connected to {hostname}")
+            except Exception as e:
+                print(f"Connection error: {e}")
+                exit()
+            # command = f"python /home/chem_epics/chemdata2/Data/ASWAXS/Software/ASWAXS/Scripts/Run_Blender.py {ifname} {ofname} {spacing:0.2f}"
+            command = f'blender --background --python /home/chem_epics/chemdata2/Data/ASWAXS/Software/ASWAXS/Scripts/Blender_Macro.py {ifname} {ofname} {spacing:0.2f}'
+
+            try:
+                stdin, stdout, stderr = client.exec_command(command)
+
+                # Read output
+                output = stdout.read().decode("utf-8")
+                error = stderr.read().decode("utf-8")
+
+                print("Output:")
+                print(output)
+                if error:
+                    print("Error:")
+                    print(error)
+            except Exception as e:
+                print(f"Command execution error: {e}")
+            finally:
+                client.close()
+                print("Connection closed")
+        else:
+            command = ['blender', '--background --python', '/home/chem_epics/chemdata2/Data/ASWAXS/Software/ASWAXS/Scripts/Blender_Macro.py', ifname, ofname, f'{spacing}']
+            process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            stdout, stderr = process.communicate()
+            print(stdout.decode())
+
         data = np.loadtxt(lofname, comments='#', delimiter=',')
-        self.positionPlot.add_data(data[:, 0], data[:, 1], name = 'Interpolated Positions')
+        self.positionPlot.add_data(data[:, 0], data[:, 1], name='Interpolated Positions')
         self.positionPlot.Plot(['Sample Positions', 'Interpolated Positions'])
+
 
 
 

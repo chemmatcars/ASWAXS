@@ -17,7 +17,7 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>2</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="tab">
       <attribute name="title">
@@ -54,7 +54,7 @@
      </widget>
      <widget class="QWidget" name="tab_2">
       <attribute name="title">
-       <string>Sample View</string>
+       <string>Sample View.ui</string>
       </attribute>
       <layout class="QHBoxLayout" name="horizontalLayout_2">
        <item>
@@ -66,7 +66,7 @@
           <string>{}</string>
          </property>
          <property name="filename" stdset="0">
-          <string>Sample_View.ui</string>
+          <string>Sample_View.py</string>
          </property>
          <property name="loadWhenShown" stdset="0">
           <bool>true</bool>
@@ -83,7 +83,7 @@
      </widget>
      <widget class="QWidget" name="tab_3">
       <attribute name="title">
-       <string>Bluesky Client</string>
+       <string>Bluesky_Client.ui</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout">
        <item>
@@ -95,7 +95,7 @@
           <string>{}</string>
          </property>
          <property name="filename" stdset="0">
-          <string>Bluesky_Client</string>
+          <string>Bluesky_Client.py</string>
          </property>
          <property name="loadWhenShown" stdset="0">
           <bool>true</bool>

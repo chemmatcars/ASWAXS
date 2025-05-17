@@ -211,7 +211,7 @@
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="openScansPushButton">
+              <widget class="QPushButton" name="saveScansPushButton">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                  <horstretch>0</horstretch>
@@ -219,7 +219,7 @@
                 </sizepolicy>
                </property>
                <property name="text">
-                <string>Open Scans</string>
+                <string>Save Scans</string>
                </property>
               </widget>
              </item>

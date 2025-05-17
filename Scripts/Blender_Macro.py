@@ -1,3 +1,5 @@
+# Macro run in blender API to generate extrapolated measurement positions
+
 import bpy
 import bmesh  # Import bmesh for mesh operations
 import sys
@@ -78,7 +80,7 @@ clean_scene()
 parser = argparse.ArgumentParser(description="Blender script to process CSV data.")
 parser.add_argument("csv_file", help="Path to the input CSV file")
 parser.add_argument("output_file", help="Path to save the output CSV with normals")
-parser.add_argument("spacing", help="Spacing between the points")
+parser.add_argument("spacing", help="Extrapolation resolution")
 
 # Extract arguments from Blender's sys.argv (skip Blender's own arguments)
 args = parser.parse_args(sys.argv[sys.argv.index("--") + 1:])
@@ -120,12 +122,8 @@ spline.points.add(count=len(vertices) - 1)  # Create enough points for the verti
 for i, (x, y, z) in enumerate(vertices):
     spline.points[i].co = (x, y, 0, 1)  # Set the coordinates
 
-# Optionally, adjust curve settings like resolution or type
-curve.data.resolution_u = int(float(spacing))   # Smoothness of the curve
-
 # Step 2 apply geometry nodes
 # Create a new Geometry Nodes modifier and set up nodes
-
 bpy.ops.node.new_geometry_nodes_modifier()
 node_tree = bpy.data.node_groups["Geometry Nodes"]
 
@@ -136,7 +134,7 @@ input_node = node_tree.nodes["Group Input"]
 # Create Curve to Points node and set length
 curve_to_point_node = node_tree.nodes.new(type="GeometryNodeCurveToPoints")
 curve_to_point_node.mode = 'LENGTH'
-curve_to_point_node.inputs[2].default_value = 0.2  # step = 0.2
+curve_to_point_node.inputs[2].default_value = float(spacing)  # Step resolution
 
 # Create Point to Curve node
 point_to_curve_node = node_tree.nodes.new(type="GeometryNodePointsToCurves")
